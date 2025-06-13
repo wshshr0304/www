@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>简易日历打卡APP</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 900px;
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            position: relative;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+            letter-spacing: 1px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-wrap: wrap;
+            padding: 20px;
+        }
+        
+        .calendar-section {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+        }
+        
+        .stats-section {
+            flex: 1;
+            min-width: 250px;
+            padding: 20px;
+            border-left: 1px solid #eee;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+        
+        .nav-btn {
+            background: #4b6cb7;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-btn:hover {
+            background: #182848;
+            transform: scale(1.1);
+        }
+        
+        .current-month {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #182848;
+        }
+        
+        .calendar {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .day-header {
+            text-align: center;
+            padding: 12px 0;
+            font-weight: 600;
+            color: #4b6cb7;
+            background-color: #f0f5ff;
+            border-radius: 8px;
+        }
+        
+        .calendar-day {
+            height: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f8f9ff;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        
+        .calendar-day:hover {
+            background-color: #e6eeff;
+            transform: translateY(-3px);
+        }
+        
+        .calendar-day.empty {
+            background-color: transparent;
+            cursor: default;
+        }
+        
+        .calendar-day.empty:hover {
+            background-color: transparent;
+            transform: none;
+        }
+        
+        .calendar-day.today {
+            border-color: #4b6cb7;
+        }
+        
+        .calendar-day.checked {
+            background-color: #e1f7d5;
+            color: #2e7d32;
+        }
+        
+        .calendar-day.checked::after {
+            content: "✓";
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        
+        .day-number {
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+        
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            color: white;
+            box-shadow: 0 4px 10px rgba(75, 108, 183, 0.4);
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(75, 108, 183, 0.6);
+        }
+        
+        .btn-secondary {
+            background-color: #f0f5ff;
+            color: #4b6cb7;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #e6eeff;
+        }
+        
+        .stats-container {
+            background: linear-gradient(to bottom right, #f0f5ff, #e6eeff);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stats-title {
+            text-align: center;
+            font-size: 1.5rem;
+            color: #182848;
+            margin-bottom: 25px;
+            position: relative;
+        }
+        
+        .stats-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            border-radius: 3px;
+        }
+        
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding-bottom: 15px;
+            border-bottom: 1px dashed #ccc;
+        }
+        
+        .stat-label {
+            font-size: 1.1rem;
+            color: #4b6cb7;
+        }
+        
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #182848;
+        }
+        
+        .progress-container {
+            margin-top: 30px;
+            background: #fff;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            color: #4b6cb7;
+        }
+        
+        .progress-bar {
+            height: 12px;
+            background-color: #e0e0e0;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #4b6cb7, #182848);
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+        
+        .motivation {
+            text-align: center;
+            margin-top: 25px;
+            font-style: italic;
+            color: #4b6cb7;
+            font-size: 1.1rem;
+            padding: 10px;
+            border-top: 1px solid #eee;
+        }
+        
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column;
+            }
+            
+            .stats-section {
+                border-left: none;
+                border-top: 1px solid #eee;
+            }
+            
+            .calendar-section, .stats-section {
+                min-width: 100%;
+            }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            background-color: #f8f9ff;
+            border-top: 1px solid #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-calendar-check"></i> 简易日历打卡APP</h1>
+            <p class="subtitle">记录您的每日习惯，追踪打卡进度，培养良好生活方式</p>
+        </header>
+        
+        <div class="app-container">
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <button class="nav-btn" id="prev-month"><i class="fas fa-chevron-left"></i></button>
+                    <div class="current-month" id="current-month">2023年6月</div>
+                    <button class="nav-btn" id="next-month"><i class="fas fa-chevron-right"></i></button>
+                </div>
+                
+                <div class="calendar" id="calendar">
+                    <!-- Calendar will be generated by JavaScript -->
+                </div>
+                
+                <div class="actions">
+                    <button class="btn btn-primary" id="today-btn">
+                        <i class="fas fa-calendar-day"></i> 回到今天
+                    </button>
+                    <button class="btn btn-secondary" id="reset-btn">
+                        <i class="fas fa-redo"></i> 重置数据
+                    </button>
+                </div>
+            </div>
+            
+            <div class="stats-section">
+                <div class="stats-container">
+                    <h2 class="stats-title">打卡统计</h2>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">本月已打卡天数：</span>
+                        <span class="stat-value" id="current-month-days">0天</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">连续打卡天数：</span>
+                        <span class="stat-value" id="streak-days">0天</span>
+                    </div>
+                    
+                    <div class="stat-item">
+                        <span class="stat-label">总打卡天数：</span>
+                        <span class="stat-value" id="total-days">0天</span>
+                    </div>
+                    
+                    <div class="progress-container">
+                        <div class="progress-label">
+                            <span>本月打卡进度</span>
+                            <span id="progress-percent">0%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="motivation">
+                        <i class="fas fa-quote-left"></i> 坚持打卡21天，养成一个好习惯 <i class="fas fa-quote-right"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>数据保存在您的浏览器本地存储中 | 简易日历打卡APP © 2023</p>
+        </footer>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 全局变量
+            let currentDate = new Date();
+            let checkedDays = JSON.parse(localStorage.getItem('checkedDays')) || {};
+            
+            // DOM元素
+            const calendarEl = document.getElementById('calendar');
+            const currentMonthEl = document.getElementById('current-month');
+            const prevMonthBtn = document.getElementById('prev-month');
+            const nextMonthBtn = document.getElementById('next-month');
+            const todayBtn = document.getElementById('today-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const currentMonthDaysEl = document.getElementById('current-month-days');
+            const streakDaysEl = document.getElementById('streak-days');
+            const totalDaysEl = document.getElementById('total-days');
+            const progressPercentEl = document.getElementById('progress-percent');
+            const progressFillEl = document.getElementById('progress-fill');
+            
+            // 初始化
+            renderCalendar();
+            updateStats();
+            
+            // 事件监听
+            prevMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() - 1);
+                renderCalendar();
+            });
+            
+            nextMonthBtn.addEventListener('click', () => {
+                currentDate.setMonth(currentDate.getMonth() + 1);
+                renderCalendar();
+            });
+            
+            todayBtn.addEventListener('click', () => {
+                currentDate = new Date();
+                renderCalendar();
+            });
+            
+            resetBtn.addEventListener('click', () => {
+                if (confirm('确定要重置所有打卡数据吗？此操作不可撤销。')) {
+                    checkedDays = {};
+                    localStorage.removeItem('checkedDays');
+                    renderCalendar();
+                    updateStats();
+                }
+            });
+            
+            // 渲染日历
+            function renderCalendar() {
+                const year = currentDate.getFullYear();
+                const month = currentDate.getMonth();
+                
+                // 更新当前月份显示
+                currentMonthEl.textContent = `${year}年${month + 1}月`;
+                
+                // 清空日历
+                calendarEl.innerHTML = '';
+                
+                // 添加星期标题
+                const daysOfWeek = ['日', '一', '二', '三', '四', '五', '六'];
+                daysOfWeek.forEach(day => {
+                    const dayHeader = document.createElement('div');
+                    dayHeader.className = 'day-header';
+                    dayHeader.textContent = day;
+                    calendarEl.appendChild(dayHeader);
+                });
+                
+                // 获取当月第一天和最后一天
+                const firstDay = new Date(year, month, 1);
+                const lastDay = new Date(year, month + 1, 0);
+                
+                // 填充空白（如果当月第一天不是周日）
+                for (let i = 0; i < firstDay.getDay(); i++) {
+                    const emptyDay = document.createElement('div');
+                    emptyDay.className = 'calendar-day empty';
+                    calendarEl.appendChild(emptyDay);
+                }
+                
+                // 填充日期
+                const today = new Date();
+                const todayStr = today.toDateString();
+                
+                for (let date = 1; date <= lastDay.getDate(); date++) {
+                    const dayEl = document.createElement('div');
+                    dayEl.className = 'calendar-day';
+                    dayEl.innerHTML = `<span class="day-number">${date}</span>`;
+                    
+                    const currentDate = new Date(year, month, date);
+                    const currentDateStr = currentDate.toDateString();
+                    
+                    // 标记今天
+                    if (currentDateStr === todayStr) {
+                        dayEl.classList.add('today');
+                    }
+                    
+                    // 标记已打卡日期
+                    if (checkedDays[currentDateStr]) {
+                        dayEl.classList.add('checked');
+                    }
+                    
+                    // 添加点击事件
+                    dayEl.addEventListener('click', () => {
+                        toggleCheckDay(currentDateStr);
+                        dayEl.classList.toggle('checked');
+                        updateStats();
+                    });
+                    
+                    calendarEl.appendChild(dayEl);
+                }
+            }
+            
+            // 切换打卡状态
+            function toggleCheckDay(dateStr) {
+                if (checkedDays[dateStr]) {
+                    delete checkedDays[dateStr];
+                } else {
+                    checkedDays[dateStr] = true;
+                }
+                localStorage.setItem('checkedDays', JSON.stringify(checkedDays));
+            }
+            
+            // 更新统计信息
+            function updateStats() {
+                const today = new Date();
+                const currentYear = today.getFullYear();
+                const currentMonth = today.getMonth();
+                
+                // 计算本月打卡天数
+                let currentMonthCount = 0;
+                const currentMonthDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+                
+                for (let i = 1; i <= currentMonthDays; i++) {
+                    const date = new Date(currentYear, currentMonth, i);
+                    if (checkedDays[date.toDateString()]) {
+                        currentMonthCount++;
+                    }
+                }
+                
+                // 计算连续打卡天数
+                let streak = 0;
+                let tempDate = new Date(today);
+                
+                while (checkedDays[tempDate.toDateString()]) {
+                    streak++;
+                    tempDate.setDate(tempDate.getDate() - 1);
+                }
+                
+                // 计算总打卡天数
+                const totalDays = Object.keys(checkedDays).length;
+                
+                // 更新UI
+                currentMonthDaysEl.textContent = `${currentMonthCount}天`;
+                streakDaysEl.textContent = `${streak}天`;
+                totalDaysEl.textContent = `${totalDays}天`;
+                
+                // 更新进度条
+                const progress = Math.round((currentMonthCount / currentMonthDays) * 100);
+                progressPercentEl.textContent = `${progress}%`;
+                progressFillEl.style.width = `${progress}%`;
+            }
+        });
+    </script>
+</body>
+</html>
